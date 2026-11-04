@@ -18,6 +18,38 @@ const error = ref('')
 const sent = ref(false)
 
 const roles = ['Estudiante', 'Docente']
+const slides = [
+  {
+    src: '/images/auth/register-1.jpg',
+    title: 'Registro diario',
+    text: 'Marca presente, tarde o ausente en segundos desde la lista del grupo.',
+  },
+  {
+    src: '/images/auth/register-2.jpg',
+    title: 'Porcentajes automáticos',
+    text: 'Consulta la asistencia de cada estudiante y del grupo sin hacer cuentas.',
+  },
+  {
+    src: '/images/auth/register-3.jpg',
+    title: 'Participación en clase',
+    text: 'Lleva el control de todos tus grupos y estudiantes desde un solo lugar.',
+  },
+  {
+    src: '/images/auth/register-4.jpg',
+    title: 'Trabajo desde cualquier lugar',
+    text: 'Usa AsistControl desde la computadora, la tableta o el celular.',
+  },
+  {
+    src: '/images/auth/register-5.jpg',
+    title: 'Historial claro',
+    text: 'Revisa el historial de asistencia por fecha, grupo y materia.',
+  },
+  {
+    src: '/images/auth/register-6.jpg',
+    title: 'Equipo organizado',
+    text: 'Grupos, estudiantes y asistencias listos para cada clase.',
+  },
+]
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const passwordsMatch = computed(() => form.value.password === form.value.confirm)
@@ -58,13 +90,7 @@ function handleSubmit() {
 </script>
 
 <template>
-  <AuthLayout
-    :images="[
-      '/images/auth/register-1.jpg',
-      '/images/auth/register-2.jpg',
-      '/images/auth/register-3.jpg',
-    ]"
-  >
+  <AuthLayout :slides="slides" align="top">
     <div class="auth-form">
       <h1 class="auth-title">Crear una cuenta</h1>
       <p class="auth-subtitle">Completa tus datos para solicitar acceso a AsistControl.</p>
