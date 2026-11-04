@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+  <!-- Fondo blanco circular; las esquinas quedan transparentes -->
+  <circle cx="150" cy="150" r="150" fill="#fff"/>
+
+  <!-- Aro negro abierto -->
+  <path
+    d="M 246.5 69
+       A 126 126 0 1 0 246.5 231"
+    fill="none"
+    stroke="#050505"
+    stroke-width="42"
+    stroke-linecap="round"
+  />
+
+  <!-- Check naranja -->
+  <path
+    d="M 97 151 L 140 194 L 211 109"
+    fill="none"
+    stroke="#ff4b24"
+    stroke-width="30"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>
