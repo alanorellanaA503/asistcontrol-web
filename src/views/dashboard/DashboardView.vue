@@ -1,74 +1,95 @@
 <script setup>
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { RouterLink } from 'vue-router'
 import { useStore } from 'vuex'
-import { LogOut } from 'lucide-vue-next'
-import BrandLogo from '@/components/BrandLogo.vue'
-import ThemeToggle from '@/components/ThemeToggle.vue'
-import AppFooter from '@/layouts/AppFooter.vue'
+import { Code, Database, Smartphone, ArrowRight } from 'lucide-vue-next'
+import AppLayout from '@/layouts/AppLayout.vue'
+import { getGroups } from '@/services/groups'
 
-const router = useRouter()
 const store = useStore()
+const groups = ref([])
 
-const userName = computed(() => store.state.user?.name ?? 'docente')
+const iconMap = { code: Code, database: Database, smartphone: Smartphone }
 
-function logout() {
-  store.commit('LOGOUT')
-  router.push('/login')
-}
+onMounted(async () => {
+  groups.value = await getGroups()
+})
 </script>
 
 <template>
-  <div class="dashboard-page">
-    <header class="dash-topbar">
-      <BrandLogo :height="40" />
-      <div class="dash-actions">
-        <ThemeToggle />
-        <v-btn variant="outlined" color="secondary" rounded="pill" @click="logout">
-          <LogOut :size="18" class="me-2" /> Cerrar sesión
-        </v-btn>
-      </div>
-    </header>
+  <AppLayout>
+    <h1 class="page-title">¡Bienvenido, {{ store.state.user?.name ?? 'Docente' }}!</h1>
+    <p class="page-subtitle">
+      Consulta y registra la información de asistencia académica desde un solo lugar.
+    </p>
 
-    <main class="dash-main">
-      <h1>¡Bienvenido, {{ userName }}!</h1>
-      <p>Panel en construcción. Aquí se integrarán los grupos, la asistencia y el perfil.</p>
-    </main>
-
-    <AppFooter />
-  </div>
+    <div class="group-grid">
+      <RouterLink v-for="group in groups" :key="group.id" to="/asistencia" class="group-card">
+        <div class="icon-circle">
+          <component :is="iconMap[group.icon]" :size="28" />
+        </div>
+        <h2>{{ group.subject }}</h2>
+        <p class="group-meta">{{ group.group }} · {{ group.schedule }}</p>
+        <span class="group-link"> Ver asistencia <ArrowRight :size="16" /> </span>
+      </RouterLink>
+    </div>
+  </AppLayout>
 </template>
 
 <style scoped>
-.dashboard-page {
+.group-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+  margin-top: 2rem;
+}
+
+.group-card {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  background: rgb(var(--v-theme-surface));
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.1);
+  border-radius: var(--radius);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.dash-topbar {
-  display: flex;
+.group-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+
+.group-card h2 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-top: 0.75rem;
+}
+
+.group-meta {
+  color: rgb(var(--v-theme-muted));
+  font-size: 0.95rem;
+}
+
+.group-link {
+  display: inline-flex;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 1rem;
-  padding: 1rem 4vw;
+  gap: 0.35rem;
+  margin-top: 0.75rem;
+  color: rgb(var(--v-theme-primary));
+  font-weight: 600;
 }
 
-.dash-actions {
-  display: flex;
+.icon-circle {
+  display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-}
-
-.dash-main {
-  flex: 1;
-  padding: 3rem 4vw;
-}
-
-.dash-main h1 {
-  font-size: clamp(1.8rem, 4vw, 2.5rem);
-  font-weight: 800;
-  margin-bottom: 0.5rem;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(var(--v-theme-primary), 0.14);
+  color: rgb(var(--v-theme-primary));
 }
 </style>
