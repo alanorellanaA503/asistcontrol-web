@@ -56,11 +56,11 @@ const values = [
 
 // Reemplaza con los nombres y roles reales
 const team = [
-  { name: 'Integrante 1', role: 'Rol en el proyecto' },
-  { name: 'Integrante 2', role: 'Rol en el proyecto' },
-  { name: 'Integrante 3', role: 'Rol en el proyecto' },
-  { name: 'Integrante 4', role: 'Rol en el proyecto' },
-  { name: 'Integrante 5', role: 'Rol en el proyecto' },
+  { name: 'Anderson Daniel Durán Caceres', role: 'Scrum Master' },
+  { name: 'Alan Antonio Orellana Arguera', role: 'Product Owner y Frontend' },
+  { name: 'Adrián Josue Chicas González', role: 'Developer Full Stack' },
+  { name: 'Michael Steven Jiménez Navas', role: 'Developer Backend' },
+  { name: 'Alessandra Giselle Córdova Burgos', role: 'Developer Frontend' },
 ]
 </script>
 
@@ -142,7 +142,7 @@ const team = [
 
     <section id="equipo" class="section">
       <h2>Nuestro equipo</h2>
-      <div class="cards cards-5">
+      <div class="team-grid">
         <article v-for="member in team" :key="member.name" class="card">
           <div class="avatar">
             <UserRound :size="36" />
@@ -166,12 +166,17 @@ const team = [
 
 /* Navbar */
 .navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
   padding: 1.25rem 4vw;
+  background: rgb(var(--v-theme-background));
+  border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.08);
 }
 
 .nav-links {
@@ -266,6 +271,46 @@ const team = [
     transform 0.2s ease,
     box-shadow 0.2s ease;
 }
+/* Equipo: 3 por fila en escritorio, la última fila centrada */
+.team-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.5rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.team-grid .card {
+  flex: 0 0 calc((100% - 3rem) / 3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (max-width: 800px) {
+  .team-grid .card {
+    flex-basis: calc((100% - 1.5rem) / 2);
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    max-width: 360px;
+    margin: 0 auto;
+  }
+
+  .hero-actions :deep(.v-btn) {
+    width: 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  .team-grid .card {
+    flex-basis: 100%;
+  }
+}
 
 .card:hover {
   transform: translateY(-4px);
@@ -316,6 +361,35 @@ const team = [
 
   .nav-links {
     display: none;
+  }
+}
+
+/* Móvil: navbar en dos filas, con marca arriba y acciones abajo */
+@media (max-width: 800px) {
+  .navbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    padding: 1rem 4vw;
+  }
+
+  .navbar > a,
+  .brand {
+    align-self: center;
+  }
+
+  .nav-actions {
+    display: grid;
+    grid-template-columns: auto 1fr 1fr;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .nav-actions :deep(.v-btn) {
+    width: 100%;
+    font-size: 0.75rem;
+    padding: 0 0.5rem;
+    letter-spacing: 0;
   }
 }
 </style>
