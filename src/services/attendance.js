@@ -1,6 +1,9 @@
 // Resumen de asistencia por grupo (datos de ejemplo).
 // Cuando haya backend, estas funciones harán la llamada a la API.
 
+const ATTENDANCES_STORAGE_KEY = 'asistcontrol-attendances'
+const ATTENDANCE_STATUSES = ['present', 'late', 'absent']
+
 export const attendanceSummary = {
   1: {
     totalClasses: 20,
@@ -48,4 +51,62 @@ export function getGroupAverage(students) {
   if (!students.length) return 0
   const sum = students.reduce((acc, s) => acc + s.percentage, 0)
   return Math.round((sum / students.length) * 10) / 10
+}
+
+export function getAttendances() {
+  const savedAttendances = localStorage.getItem(ATTENDANCES_STORAGE_KEY)
+  if (savedAttendances === null) return []
+
+  const attendances = JSON.parse(savedAttendances)
+  if (!Array.isArray(attendances)) {
+    throw new TypeError('Los datos guardados de asistencia no tienen un formato válido.')
+  }
+  if (
+    attendances.some(
+      (attendance) =>
+        !attendance ||
+        attendance.groupId == null ||
+        !attendance.group ||
+        !attendance.subject ||
+        !attendance.date ||
+        !Array.isArray(attendance.students) ||
+        attendance.students.some(
+          (student) => student.id == null || !ATTENDANCE_STATUSES.includes(student.status),
+        ),
+    )
+  ) {
+    throw new TypeError('Uno o más registros de asistencia guardados no tienen un formato válido.')
+  }
+
+  return attendances
+}
+
+export function saveAttendance(attendance) {
+  if (!attendance || attendance.groupId == null || !attendance.group || !attendance.subject) {
+    throw new TypeError('La asistencia debe incluir un grupo y una materia.')
+  }
+  if (!attendance.date || !Array.isArray(attendance.students)) {
+    throw new TypeError('La asistencia debe incluir una fecha y la lista de estudiantes.')
+  }
+  if (
+    attendance.students.some(
+      (student) => student.id == null || !ATTENDANCE_STATUSES.includes(student.status),
+    )
+  ) {
+    throw new TypeError('Cada estudiante debe tener un identificador y un estado válido.')
+  }
+
+  const attendances = getAttendances()
+  const existingIndex = attendances.findIndex(
+    (saved) => saved.groupId === attendance.groupId && saved.date === attendance.date,
+  )
+
+  if (existingIndex === -1) {
+    attendances.push(attendance)
+  } else {
+    attendances[existingIndex] = attendance
+  }
+
+  localStorage.setItem(ATTENDANCES_STORAGE_KEY, JSON.stringify(attendances))
+  return attendance
 }

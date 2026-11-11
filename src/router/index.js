@@ -30,6 +30,18 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/asistencia/nueva',
+    name: 'register-attendance',
+    component: () => import('@/views/attendance/AttendanceRegisterView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/asistencias',
+    name: 'attendance-history',
+    component: () => import('@/views/attendance/AttendanceHistoryView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/estudiantes',
     name: 'students',
     component: () => import('@/views/students/StudentsView.vue'),
