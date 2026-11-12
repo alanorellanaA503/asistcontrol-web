@@ -8,7 +8,10 @@ import AuthLayout from '@/layouts/AuthLayout.vue'
 const router = useRouter()
 const store = useStore()
 
-const identifier = ref('')
+// Acceso simulado: usuario y contraseña fijos para pruebas
+const VALID_PASSWORD = '124'
+
+const username = ref('')
 const password = ref('')
 const showPassword = ref(false)
 const error = ref('')
@@ -16,13 +19,26 @@ const error = ref('')
 function handleSubmit() {
   error.value = ''
 
-  if (!identifier.value.trim() || !password.value) {
-    error.value = 'Completa tu correo o carné y tu contraseña.'
+  const user = username.value.trim()
+
+  if (!user || !password.value) {
+    error.value = 'Completa tu usuario y tu contraseña.'
     return
   }
 
-  // Inicio de sesión simulado: esta versión no tiene backend
-  store.commit('SET_USER', { name: identifier.value.trim(), role: 'Docente' })
+  if (password.value !== VALID_PASSWORD) {
+    error.value = 'Contraseña incorrecta.'
+    return
+  }
+
+  // Guardamos el usuario que escribió para usarlo en el saludo y en el perfil
+  store.commit('SET_USER', {
+    username: user,
+    name: user,
+    role: 'Docente',
+    email: '',
+    institutionalId: '',
+  })
   router.push('/dashboard')
 }
 </script>
@@ -39,9 +55,9 @@ function handleSubmit() {
 
       <form novalidate @submit.prevent="handleSubmit">
         <v-text-field
-          v-model="identifier"
-          label="Correo electrónico o carné"
-          placeholder="Ej. ejemplo@gmail.com"
+          v-model="username"
+          label="Usuario"
+          placeholder="Ej. docente"
           variant="outlined"
           color="primary"
           autocomplete="username"
