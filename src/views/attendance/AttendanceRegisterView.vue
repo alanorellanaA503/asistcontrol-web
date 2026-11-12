@@ -1,24 +1,31 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+import { useStore } from 'vuex'
 import { ArrowLeft, History, Save } from 'lucide-vue-next'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { getGroupAttendance, getAttendances, saveAttendance } from '@/services/attendance'
 import { getGroups } from '@/services/groups'
 
 const route = useRoute()
+const router = useRouter()
+const store = useStore()
+
 const groups = ref([])
 const selectedGroupId = ref(null)
 const attendanceDate = ref(getToday())
 const students = ref([])
 const isLoading = ref(false)
+const isSaving = ref(false)
 const loadError = ref('')
-const snackbar = ref({ show: false, text: '', color: 'success' })
+
+// Evita que una respuesta lenta sobrescriba la última selección
+let requestId = 0
 
 const statuses = [
-  { title: 'Presente', value: 'present', color: 'success' },
-  { title: 'Tarde', value: 'late', color: 'warning' },
-  { title: 'Ausente', value: 'absent', color: 'error' },
+  { title: 'Presente', value: 'present' },
+  { title: 'Tarde', value: 'late' },
+  { title: 'Ausente', value: 'absent' },
 ]
 
 const headers = [
@@ -27,8 +34,15 @@ const headers = [
   { title: 'Estado', key: 'status', width: 200 },
 ]
 
-const selectedGroup = computed(() => groups.value.find((group) => group.id === selectedGroupId.value))
-const canSave = computed(() => Boolean(selectedGroup.value && attendanceDate.value && students.value.length))
+const selectedGroup = computed(() =>
+  groups.value.find((group) => group.id === selectedGroupId.value),
+)
+
+const canSave = computed(
+  () =>
+    Boolean(selectedGroup.value && attendanceDate.value && students.value.length) &&
+    !isSaving.value,
+)
 
 function getToday() {
   const today = new Date()
@@ -37,13 +51,14 @@ function getToday() {
   return `${today.getFullYear()}-${month}-${day}`
 }
 
-function showError(error) {
-  loadError.value = error instanceof Error ? error.message : String(error)
+function errorText(error) {
+  return error instanceof Error ? error.message : String(error)
 }
 
 async function loadStudents() {
   if (!selectedGroupId.value || !attendanceDate.value) return
 
+  const currentRequest = ++requestId
   isLoading.value = true
   loadError.value = ''
   students.value = []
@@ -53,40 +68,38 @@ async function loadStudents() {
       getGroupAttendance(selectedGroupId.value),
       Promise.resolve(getAttendances()),
     ])
+    if (currentRequest !== requestId) return
+
+    // Si ya hay asistencia guardada para este grupo y fecha, muestra sus estados
     const existing = attendances.find(
       (record) => record.groupId === selectedGroupId.value && record.date === attendanceDate.value,
     )
 
     students.value = groupStudents.map((student) => {
-      const savedStudent = existing?.students.find((saved) => saved.id === student.id)
-      return { ...student, status: savedStudent?.status ?? 'present' }
+      const saved = existing?.students.find((s) => s.id === student.id)
+      return {
+        id: student.id,
+        name: student.name,
+        code: student.code,
+        status: saved?.status ?? 'present',
+      }
     })
   } catch (error) {
-    showError(error)
+    if (currentRequest === requestId) loadError.value = errorText(error)
   } finally {
-    isLoading.value = false
+    if (currentRequest === requestId) isLoading.value = false
   }
 }
 
-watch([selectedGroupId, attendanceDate], () => {
-  loadStudents()
-})
-
-onMounted(async () => {
-  try {
-    groups.value = await getGroups()
-    const requestedGroup = Number(route.query.grupo)
-    selectedGroupId.value = groups.value.some((group) => group.id === requestedGroup)
-      ? requestedGroup
-      : groups.value[0]?.id ?? null
-  } catch (error) {
-    showError(error)
-  }
-})
+function setStatus(studentId, status) {
+  const student = students.value.find((s) => s.id === studentId)
+  if (student) student.status = status
+}
 
 function submitAttendance() {
   if (!canSave.value) return
 
+  isSaving.value = true
   try {
     saveAttendance({
       groupId: selectedGroup.value.id,
@@ -95,15 +108,30 @@ function submitAttendance() {
       date: attendanceDate.value,
       students: students.value.map(({ id, name, code, status }) => ({ id, name, code, status })),
     })
-    snackbar.value = { show: true, text: 'La asistencia se guardó correctamente.', color: 'success' }
+
+    store.commit('SHOW_NOTICE', { text: 'Asistencia guardada correctamente.', color: 'success' })
+
+    // Regresa al resumen del grupo, que ya muestra los datos guardados
+    router.push({ name: 'attendance', query: { grupo: selectedGroup.value.id } })
   } catch (error) {
-    snackbar.value = {
-      show: true,
-      text: error instanceof Error ? error.message : String(error),
-      color: 'error',
-    }
+    store.commit('SHOW_NOTICE', { text: errorText(error), color: 'error' })
+    isSaving.value = false
   }
 }
+
+watch([selectedGroupId, attendanceDate], loadStudents)
+
+onMounted(async () => {
+  try {
+    groups.value = await getGroups()
+    const requestedGroup = Number(route.query.grupo)
+    selectedGroupId.value = groups.value.some((group) => group.id === requestedGroup)
+      ? requestedGroup
+      : (groups.value[0]?.id ?? null)
+  } catch (error) {
+    loadError.value = errorText(error)
+  }
+})
 </script>
 
 <template>
@@ -161,7 +189,7 @@ function submitAttendance() {
       >
         <template #[`item.status`]="{ item }">
           <v-select
-            v-model="item.status"
+            :model-value="item.status"
             :items="statuses"
             item-title="title"
             item-value="value"
@@ -169,6 +197,7 @@ function submitAttendance() {
             density="compact"
             hide-details
             :aria-label="`Estado de ${item.name}`"
+            @update:model-value="setStatus(item.id, $event)"
           />
         </template>
       </v-data-table>
@@ -183,14 +212,16 @@ function submitAttendance() {
       >
         <ArrowLeft :size="18" class="me-2" /> Volver al grupo
       </v-btn>
-      <v-btn color="primary" rounded="pill" :disabled="!canSave || isLoading" @click="submitAttendance">
+      <v-btn
+        color="primary"
+        rounded="pill"
+        :disabled="!canSave"
+        :loading="isSaving"
+        @click="submitAttendance"
+      >
         <Save :size="18" class="me-2" /> Guardar asistencia
       </v-btn>
     </div>
-
-    <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="3500" location="bottom">
-      {{ snackbar.text }}
-    </v-snackbar>
   </AppLayout>
 </template>
 

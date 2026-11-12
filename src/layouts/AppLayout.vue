@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 import { House, ClipboardCheck, History, Users, UserRound, LogOut } from 'lucide-vue-next'
@@ -8,6 +9,14 @@ import AppFooter from '@/layouts/AppFooter.vue'
 
 const router = useRouter()
 const store = useStore()
+
+// La notificación se cierra sola y limpia el store al terminar
+const noticeOpen = computed({
+  get: () => store.state.notice !== null,
+  set: (open) => {
+    if (!open) store.commit('CLEAR_NOTICE')
+  },
+})
 
 const links = [
   { to: '/dashboard', label: 'Inicio', icon: House },
@@ -64,6 +73,15 @@ function logout() {
     </main>
 
     <AppFooter />
+
+    <v-snackbar
+      v-model="noticeOpen"
+      :color="store.state.notice?.color"
+      :timeout="3500"
+      location="bottom"
+    >
+      {{ store.state.notice?.text }}
+    </v-snackbar>
   </div>
 </template>
 

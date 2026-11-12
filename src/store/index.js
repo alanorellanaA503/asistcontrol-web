@@ -16,6 +16,8 @@ const store = createStore({
   state: {
     user: savedUser,
     isAuthenticated: !!savedUser,
+    // Notificación global: { text, color } o null
+    notice: null,
   },
 
   mutations: {
@@ -28,10 +30,17 @@ const store = createStore({
       state.user = null
       state.isAuthenticated = false
     },
+
+    SHOW_NOTICE(state, notice) {
+      state.notice = notice
+    },
+
+    CLEAR_NOTICE(state) {
+      state.notice = null
+    },
   },
 })
 
-// Guarda o borra la sesión cada vez que cambia el usuario
 store.subscribe((_mutation, state) => {
   if (state.user) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state.user))

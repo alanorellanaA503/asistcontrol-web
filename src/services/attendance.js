@@ -43,8 +43,38 @@ export function calcPercentage({ present, late, absent }) {
 
 export function getGroupAttendance(groupId) {
   const summary = attendanceSummary[groupId] ?? { totalClasses: 0, students: [] }
-  const students = summary.students.map((s) => ({ ...s, percentage: calcPercentage(s) }))
-  return Promise.resolve({ totalClasses: summary.totalClasses, students })
+  const savedRecords = getAttendances().filter((record) => record.groupId === groupId)
+
+  // Copia la lista base de ejemplo para no modificarla
+  const byStudent = new Map(
+    summary.students.map((s) => [
+      s.id,
+      { id: s.id, name: s.name, code: s.code, present: s.present, late: s.late, absent: s.absent },
+    ]),
+  )
+
+  // Suma cada estado guardado a la cuenta del estudiante
+  savedRecords.forEach((record) => {
+    record.students.forEach((student) => {
+      if (!byStudent.has(student.id)) {
+        byStudent.set(student.id, {
+          id: student.id,
+          name: student.name,
+          code: student.code,
+          present: 0,
+          late: 0,
+          absent: 0,
+        })
+      }
+      byStudent.get(student.id)[student.status] += 1
+    })
+  })
+
+  const students = [...byStudent.values()].map((s) => ({ ...s, percentage: calcPercentage(s) }))
+  return Promise.resolve({
+    totalClasses: summary.totalClasses + savedRecords.length,
+    students,
+  })
 }
 
 export function getGroupAverage(students) {

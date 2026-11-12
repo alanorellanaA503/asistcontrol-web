@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
-import { ClipboardPlus, Eye, Search } from 'lucide-vue-next'
+import { ClipboardPlus, Eye, Search, X } from 'lucide-vue-next'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { getAttendances } from '@/services/attendance'
 import { getGroups } from '@/services/groups'
@@ -47,8 +47,8 @@ const filteredAttendances = computed(() => {
   return attendanceRows.value.filter((attendance) => {
     const matchesGroup =
       selectedGroupId.value === 'all' || attendance.groupId === selectedGroupId.value
-    const searchableText = `${attendance.subject} ${attendance.group} ${attendance.date}`
-      .toLocaleLowerCase('es')
+    const searchableText =
+      `${attendance.subject} ${attendance.group} ${attendance.date}`.toLocaleLowerCase('es')
     return matchesGroup && searchableText.includes(query)
   })
 })
@@ -184,7 +184,9 @@ onMounted(async () => {
             <h2>{{ selectedAttendance.subject }}</h2>
             <p>{{ selectedAttendance.group }} · {{ formatDate(selectedAttendance.date) }}</p>
           </div>
-          <v-btn icon="mdi-close" variant="text" aria-label="Cerrar detalle" @click="closeDetails" />
+          <v-btn icon variant="text" aria-label="Cerrar detalle" @click="closeDetails">
+            <X :size="20" />
+          </v-btn>
         </v-card-title>
         <v-card-text>
           <v-data-table
