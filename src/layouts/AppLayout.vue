@@ -1,7 +1,7 @@
 <script setup>
 import { RouterLink, useRouter } from 'vue-router'
 import { useStore } from 'vuex'
-import { House, ClipboardCheck, Users, UserRound, LogOut } from 'lucide-vue-next'
+import { House, ClipboardCheck, History, Users, UserRound, LogOut } from 'lucide-vue-next'
 import BrandLogo from '@/components/BrandLogo.vue'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import AppFooter from '@/layouts/AppFooter.vue'
@@ -12,6 +12,7 @@ const store = useStore()
 const links = [
   { to: '/dashboard', label: 'Inicio', icon: House },
   { to: '/asistencia', label: 'Asistencia', icon: ClipboardCheck },
+  { to: '/asistencias', label: 'Historial', icon: History },
   { to: '/estudiantes', label: 'Estudiantes', icon: Users },
   { to: '/perfil', label: 'Perfil', icon: UserRound },
 ]

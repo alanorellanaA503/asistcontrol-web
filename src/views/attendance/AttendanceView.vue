@@ -14,7 +14,6 @@ const selectedGroupId = ref(null)
 const students = ref([])
 const totalClasses = ref(0)
 const search = ref('')
-const snackbar = ref({ show: false, text: '', color: 'primary' })
 
 // Menos de este porcentaje se marca en rojo
 const MIN_PERCENTAGE = 70
@@ -41,17 +40,8 @@ function percentageClass(value) {
   return value < MIN_PERCENTAGE ? 'text-error' : 'text-success'
 }
 
-// "Nueva asistencia" abre la pantalla de registro cuando esa ruta exista
 function goToNewAttendance() {
-  if (router.hasRoute('register-attendance')) {
-    router.push({ name: 'register-attendance', query: { grupo: selectedGroupId.value } })
-  } else {
-    snackbar.value = {
-      show: true,
-      text: 'La pantalla para registrar asistencia todavía está en construcción.',
-      color: 'warning',
-    }
-  }
+  router.push({ name: 'register-attendance', query: { grupo: selectedGroupId.value } })
 }
 
 onMounted(async () => {
@@ -153,10 +143,6 @@ watch(selectedGroupId, (id) => {
       La tarde cuenta como media falta en el porcentaje. Asistencia menor a {{ MIN_PERCENTAGE }}% se
       marca en rojo.
     </p>
-
-    <v-snackbar v-model="snackbar.show" :color="snackbar.color" timeout="3000" location="bottom">
-      {{ snackbar.text }}
-    </v-snackbar>
   </AppLayout>
 </template>
 

@@ -37,6 +37,19 @@ Desarrollar una aplicación web con una interfaz moderna, responsive y organizad
 10. Notificaciones visuales.
 11. Perfil del docente y cierre de sesión.
 
+## Registro e historial de asistencia
+
+En **Asistencia**, selecciona un grupo y usa **Nueva asistencia** para elegir la fecha y asignar a
+cada estudiante el estado Presente, Tarde o Ausente. El formulario conserva el grupo de origen y
+permite guardar o volver al resumen del grupo. La opción **Historial** muestra los registros por
+fecha, materia y grupo; permite filtrar por grupo, buscar y abrir el detalle de estados.
+
+Los registros se almacenan en el `localStorage` del navegador bajo la clave
+`asistcontrol-attendances`. Cada registro conserva el identificador y nombre del grupo, la materia,
+la fecha y el estado de cada estudiante. Grupo y fecha forman la clave lógica del registro: guardar
+otra vez para el mismo grupo y fecha actualiza el registro existente. Los datos se mantienen en el
+navegador donde se guardaron y no se sincronizan entre dispositivos.
+
 ## Alcance
 
 Esta versión se desarrollará exclusivamente en el frontend.
