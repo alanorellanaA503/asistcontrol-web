@@ -1,4 +1,3 @@
-
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useStore } from 'vuex'
@@ -6,11 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { Search, Plus, Pencil, Trash2 } from 'lucide-vue-next'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { getGroups } from '@/services/groups'
-import {
-  getAllStudents,
-  saveStudent,
-  deleteStudent,
-} from '@/store/modules/students'
+import { getAllStudents, saveStudent, deleteStudent } from '@/services/students'
 
 const store = useStore()
 const route = useRoute()
@@ -37,15 +32,11 @@ const form = ref({
 })
 
 const groupStudents = computed(() =>
-  students.value.filter(
-    (s) => s.groupId === Number(selectedGroupId.value)
-  )
+  students.value.filter((s) => s.groupId === Number(selectedGroupId.value)),
 )
 
 function getGroupName(groupId) {
-  const group = groups.value.find(
-    (g) => Number(g.id) === Number(groupId)
-  )
+  const group = groups.value.find((g) => Number(g.id) === Number(groupId))
 
   if (!group) return `Grupo ${groupId}`
 
@@ -53,9 +44,7 @@ function getGroupName(groupId) {
 }
 
 const visibleStudents = computed(() => {
-  const source = viewMode.value === 'guardados'
-    ? students.value
-    : groupStudents.value
+  const source = viewMode.value === 'guardados' ? students.value : groupStudents.value
 
   const filter = (search.value || '').trim().toLowerCase()
 
@@ -64,8 +53,7 @@ const visibleStudents = computed(() => {
       if (!filter) return true
 
       return (
-        student.name.toLowerCase().includes(filter) ||
-        student.code.toLowerCase().includes(filter)
+        student.name.toLowerCase().includes(filter) || student.code.toLowerCase().includes(filter)
       )
     })
     .map((student) => ({
@@ -95,9 +83,7 @@ const headers = computed(() => {
 })
 
 const formTitle = computed(() =>
-  editingId.value === null
-    ? 'Agregar estudiante'
-    : 'Editar estudiante'
+  editingId.value === null ? 'Agregar estudiante' : 'Editar estudiante',
 )
 
 async function loadStudents() {
@@ -226,9 +212,7 @@ onMounted(async () => {
 
     const fromUrl = Number(route.query.grupo)
 
-    selectedGroupId.value = groups.value.some(
-      (g) => Number(g.id) === fromUrl
-    )
+    selectedGroupId.value = groups.value.some((g) => Number(g.id) === fromUrl)
       ? fromUrl
       : (groups.value[0]?.id ?? null)
 
@@ -243,16 +227,9 @@ onMounted(async () => {
   <AppLayout>
     <h1 class="page-title">Estudiantes</h1>
 
-    <p class="page-subtitle">
-      Gestión de estudiantes por grupo.
-    </p>
+    <p class="page-subtitle">Gestión de estudiantes por grupo.</p>
 
-    <v-alert
-      v-if="pageError"
-      type="error"
-      variant="tonal"
-      class="mt-4"
-    >
+    <v-alert v-if="pageError" type="error" variant="tonal" class="mt-4">
       {{ pageError }}
     </v-alert>
 
@@ -283,32 +260,17 @@ onMounted(async () => {
         </template>
       </v-text-field>
 
-      <v-btn
-        color="primary"
-        rounded="pill"
-        :disabled="groups.length === 0"
-        @click="openCreate"
-      >
+      <v-btn color="primary" rounded="pill" :disabled="groups.length === 0" @click="openCreate">
         <Plus :size="18" class="me-2" />
         Agregar estudiante
       </v-btn>
     </div>
 
     <div class="view-options">
-      <v-btn-toggle
-        v-model="viewMode"
-        color="primary"
-        variant="outlined"
-        mandatory
-        divided
-      >
-        <v-btn value="grupo">
-          Estudiantes del grupo ({{ groupStudents.length }})
-        </v-btn>
+      <v-btn-toggle v-model="viewMode" color="primary" variant="outlined" mandatory divided>
+        <v-btn value="grupo"> Estudiantes del grupo ({{ groupStudents.length }}) </v-btn>
 
-        <v-btn value="guardados">
-          Ver guardados ({{ students.length }})
-        </v-btn>
+        <v-btn value="guardados"> Ver guardados ({{ students.length }}) </v-btn>
       </v-btn-toggle>
     </div>
 
@@ -357,13 +319,7 @@ onMounted(async () => {
         </v-card-title>
 
         <v-card-text>
-          <v-alert
-            v-if="formError"
-            type="error"
-            variant="tonal"
-            density="compact"
-            class="mb-4"
-          >
+          <v-alert v-if="formError" type="error" variant="tonal" density="compact" class="mb-4">
             {{ formError }}
           </v-alert>
 
@@ -374,12 +330,7 @@ onMounted(async () => {
             color="primary"
           />
 
-          <v-text-field
-            v-model="form.code"
-            label="Carné"
-            variant="outlined"
-            color="primary"
-          />
+          <v-text-field v-model="form.code" label="Carné" variant="outlined" color="primary" />
 
           <v-select
             v-model="form.groupId"
@@ -393,22 +344,11 @@ onMounted(async () => {
         </v-card-text>
 
         <v-card-actions class="dialog-actions">
-          <v-btn
-            variant="outlined"
-            color="secondary"
-            rounded="pill"
-            @click="dialogOpen = false"
-          >
+          <v-btn variant="outlined" color="secondary" rounded="pill" @click="dialogOpen = false">
             Cancelar
           </v-btn>
 
-          <v-btn
-            color="primary"
-            rounded="pill"
-            @click="submitForm"
-          >
-            Guardar
-          </v-btn>
+          <v-btn color="primary" rounded="pill" @click="submitForm"> Guardar </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -419,33 +359,20 @@ onMounted(async () => {
       @update:model-value="deleteTarget = null"
     >
       <v-card class="dialog-card">
-        <v-card-title class="dialog-title">
-          Eliminar estudiante
-        </v-card-title>
+        <v-card-title class="dialog-title"> Eliminar estudiante </v-card-title>
 
         <v-card-text>
           ¿Deseas eliminar a
-          <strong>{{ deleteTarget?.name }}</strong>?
-          Esta acción no se puede deshacer.
+          <strong>{{ deleteTarget?.name }}</strong
+          >? Esta acción no se puede deshacer.
         </v-card-text>
 
         <v-card-actions class="dialog-actions">
-          <v-btn
-            variant="outlined"
-            color="secondary"
-            rounded="pill"
-            @click="deleteTarget = null"
-          >
+          <v-btn variant="outlined" color="secondary" rounded="pill" @click="deleteTarget = null">
             Cancelar
           </v-btn>
 
-          <v-btn
-            color="error"
-            rounded="pill"
-            @click="confirmDelete"
-          >
-            Eliminar
-          </v-btn>
+          <v-btn color="error" rounded="pill" @click="confirmDelete"> Eliminar </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
