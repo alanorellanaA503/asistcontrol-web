@@ -1,5 +1,5 @@
-// Resumen de asistencia por grupo (datos de ejemplo).
-// Cuando haya backend, estas funciones harán la llamada a la API.
+
+import { getStudentsByGroup } from '../store/modules/students'
 
 const ATTENDANCES_STORAGE_KEY = 'asistcontrol-attendances'
 const ATTENDANCE_STATUSES = ['present', 'late', 'absent']
@@ -34,109 +34,169 @@ export const attendanceSummary = {
   },
 }
 
-// La tarde cuenta como media falta: suma 0.5 en lugar de 1
 export function calcPercentage({ present, late, absent }) {
   const total = present + late + absent
+
   if (total === 0) return 0
-  return Math.round(((present + late * 0.5) / total) * 1000) / 10
+
+  return Math.round(
+    ((present + late * 0.5) / total) * 1000
+  ) / 10
 }
 
-export function getGroupAttendance(groupId) {
-  const summary = attendanceSummary[groupId] ?? { totalClasses: 0, students: [] }
-  const savedRecords = getAttendances().filter((record) => record.groupId === groupId)
+export async function getGroupAttendance(groupId) {
+  const id = Number(groupId)
 
-  // Copia la lista base de ejemplo para no modificarla
-  const byStudent = new Map(
-    summary.students.map((s) => [
-      s.id,
-      { id: s.id, name: s.name, code: s.code, present: s.present, late: s.late, absent: s.absent },
-    ]),
+  const currentStudents = await getStudentsByGroup(id)
+
+  const summary = attendanceSummary[id] ?? {
+    totalClasses: 0,
+    students: [],
+  }
+
+  const savedRecords = getAttendances().filter(
+    (record) => Number(record.groupId) === id
   )
 
-  // Suma cada estado guardado a la cuenta del estudiante
-  savedRecords.forEach((record) => {
-    record.students.forEach((student) => {
-      if (!byStudent.has(student.id)) {
-        byStudent.set(student.id, {
-          id: student.id,
-          name: student.name,
-          code: student.code,
-          present: 0,
-          late: 0,
-          absent: 0,
-        })
+  const students = currentStudents.map((student) => {
+    const initial = summary.students.find(
+      (s) => s.id === student.id
+    )
+
+    const result = {
+      id: student.id,
+      name: student.name,
+      code: student.code,
+      present: initial?.present ?? 0,
+      late: initial?.late ?? 0,
+      absent: initial?.absent ?? 0,
+    }
+
+    for (const record of savedRecords) {
+      const saved = record.students.find(
+        (s) => Number(s.id) === student.id
+      )
+
+      if (saved && ATTENDANCE_STATUSES.includes(saved.status)) {
+        result[saved.status] += 1
       }
-      byStudent.get(student.id)[student.status] += 1
-    })
+    }
+
+    return {
+      ...result,
+      percentage: calcPercentage(result),
+    }
   })
 
-  const students = [...byStudent.values()].map((s) => ({ ...s, percentage: calcPercentage(s) }))
-  return Promise.resolve({
+  return {
     totalClasses: summary.totalClasses + savedRecords.length,
     students,
-  })
+  }
 }
 
 export function getGroupAverage(students) {
   if (!students.length) return 0
-  const sum = students.reduce((acc, s) => acc + s.percentage, 0)
+
+  const sum = students.reduce(
+    (acc, student) => acc + student.percentage, 0
+  )
+
   return Math.round((sum / students.length) * 10) / 10
 }
 
 export function getAttendances() {
-  const savedAttendances = localStorage.getItem(ATTENDANCES_STORAGE_KEY)
-  if (savedAttendances === null) return []
+  const saved = localStorage.getItem(ATTENDANCES_STORAGE_KEY)
 
-  const attendances = JSON.parse(savedAttendances)
+  if (saved === null) return []
+
+  const attendances = JSON.parse(saved)
+
   if (!Array.isArray(attendances)) {
-    throw new TypeError('Los datos guardados de asistencia no tienen un formato válido.')
-  }
-  if (
-    attendances.some(
-      (attendance) =>
-        !attendance ||
-        attendance.groupId == null ||
-        !attendance.group ||
-        !attendance.subject ||
-        !attendance.date ||
-        !Array.isArray(attendance.students) ||
-        attendance.students.some(
-          (student) => student.id == null || !ATTENDANCE_STATUSES.includes(student.status),
-        ),
+    throw new TypeError(
+      'Los datos de asistencia no tienen un formato válido.'
     )
-  ) {
-    throw new TypeError('Uno o más registros de asistencia guardados no tienen un formato válido.')
+  }
+
+  const invalid = attendances.some(
+    (attendance) =>
+      !attendance ||
+      attendance.groupId == null ||
+      !attendance.group ||
+      !attendance.subject ||
+      !attendance.date ||
+      !Array.isArray(attendance.students) ||
+      attendance.students.some(
+        (student) =>
+          student.id == null ||
+          !ATTENDANCE_STATUSES.includes(student.status)
+      )
+  )
+
+  if (invalid) {
+    throw new TypeError(
+      'Uno o más registros de asistencia no son válidos.'
+    )
   }
 
   return attendances
 }
 
 export function saveAttendance(attendance) {
-  if (!attendance || attendance.groupId == null || !attendance.group || !attendance.subject) {
-    throw new TypeError('La asistencia debe incluir un grupo y una materia.')
-  }
-  if (!attendance.date || !Array.isArray(attendance.students)) {
-    throw new TypeError('La asistencia debe incluir una fecha y la lista de estudiantes.')
-  }
+  const groupId = Number(attendance?.groupId)
+
   if (
-    attendance.students.some(
-      (student) => student.id == null || !ATTENDANCE_STATUSES.includes(student.status),
-    )
+    !attendance ||
+    !Number.isInteger(groupId) ||
+    groupId <= 0 ||
+    !attendance.group ||
+    !attendance.subject
   ) {
-    throw new TypeError('Cada estudiante debe tener un identificador y un estado válido.')
+    throw new TypeError(
+      'La asistencia debe incluir grupo y materia.'
+    )
+  }
+
+  if (!attendance.date || !Array.isArray(attendance.students)) {
+    throw new TypeError(
+      'La asistencia necesita una fecha y estudiantes.'
+    )
+  }
+
+  const invalid = attendance.students.some(
+    (student) =>
+      student.id == null ||
+      !ATTENDANCE_STATUSES.includes(student.status)
+  )
+
+  if (invalid) {
+    throw new TypeError(
+      'Cada estudiante necesita un identificador y estado válido.'
+    )
   }
 
   const attendances = getAttendances()
+
+  const newAttendance = {
+    ...attendance,
+    groupId,
+  }
+
   const existingIndex = attendances.findIndex(
-    (saved) => saved.groupId === attendance.groupId && saved.date === attendance.date,
+    (saved) =>
+      Number(saved.groupId) === groupId &&
+      saved.date === attendance.date
   )
 
   if (existingIndex === -1) {
-    attendances.push(attendance)
+    attendances.push(newAttendance)
   } else {
-    attendances[existingIndex] = attendance
+    attendances[existingIndex] = newAttendance
   }
 
-  localStorage.setItem(ATTENDANCES_STORAGE_KEY, JSON.stringify(attendances))
-  return attendance
+  localStorage.setItem(
+    ATTENDANCES_STORAGE_KEY,
+    JSON.stringify(attendances)
+  )
+
+  return newAttendance
 }
