@@ -1,5 +1,4 @@
-
-import { getStudentsByGroup } from '../store/modules/students'
+import { getStudentsByGroup } from './students'
 
 const ATTENDANCES_STORAGE_KEY = 'asistcontrol-attendances'
 const ATTENDANCE_STATUSES = ['present', 'late', 'absent']
@@ -39,9 +38,7 @@ export function calcPercentage({ present, late, absent }) {
 
   if (total === 0) return 0
 
-  return Math.round(
-    ((present + late * 0.5) / total) * 1000
-  ) / 10
+  return Math.round(((present + late * 0.5) / total) * 1000) / 10
 }
 
 export async function getGroupAttendance(groupId) {
@@ -54,14 +51,10 @@ export async function getGroupAttendance(groupId) {
     students: [],
   }
 
-  const savedRecords = getAttendances().filter(
-    (record) => Number(record.groupId) === id
-  )
+  const savedRecords = getAttendances().filter((record) => Number(record.groupId) === id)
 
   const students = currentStudents.map((student) => {
-    const initial = summary.students.find(
-      (s) => s.id === student.id
-    )
+    const initial = summary.students.find((s) => s.id === student.id)
 
     const result = {
       id: student.id,
@@ -73,9 +66,7 @@ export async function getGroupAttendance(groupId) {
     }
 
     for (const record of savedRecords) {
-      const saved = record.students.find(
-        (s) => Number(s.id) === student.id
-      )
+      const saved = record.students.find((s) => Number(s.id) === student.id)
 
       if (saved && ATTENDANCE_STATUSES.includes(saved.status)) {
         result[saved.status] += 1
@@ -97,9 +88,7 @@ export async function getGroupAttendance(groupId) {
 export function getGroupAverage(students) {
   if (!students.length) return 0
 
-  const sum = students.reduce(
-    (acc, student) => acc + student.percentage, 0
-  )
+  const sum = students.reduce((acc, student) => acc + student.percentage, 0)
 
   return Math.round((sum / students.length) * 10) / 10
 }
@@ -112,9 +101,7 @@ export function getAttendances() {
   const attendances = JSON.parse(saved)
 
   if (!Array.isArray(attendances)) {
-    throw new TypeError(
-      'Los datos de asistencia no tienen un formato válido.'
-    )
+    throw new TypeError('Los datos de asistencia no tienen un formato válido.')
   }
 
   const invalid = attendances.some(
@@ -126,16 +113,12 @@ export function getAttendances() {
       !attendance.date ||
       !Array.isArray(attendance.students) ||
       attendance.students.some(
-        (student) =>
-          student.id == null ||
-          !ATTENDANCE_STATUSES.includes(student.status)
-      )
+        (student) => student.id == null || !ATTENDANCE_STATUSES.includes(student.status),
+      ),
   )
 
   if (invalid) {
-    throw new TypeError(
-      'Uno o más registros de asistencia no son válidos.'
-    )
+    throw new TypeError('Uno o más registros de asistencia no son válidos.')
   }
 
   return attendances
@@ -151,27 +134,19 @@ export function saveAttendance(attendance) {
     !attendance.group ||
     !attendance.subject
   ) {
-    throw new TypeError(
-      'La asistencia debe incluir grupo y materia.'
-    )
+    throw new TypeError('La asistencia debe incluir grupo y materia.')
   }
 
   if (!attendance.date || !Array.isArray(attendance.students)) {
-    throw new TypeError(
-      'La asistencia necesita una fecha y estudiantes.'
-    )
+    throw new TypeError('La asistencia necesita una fecha y estudiantes.')
   }
 
   const invalid = attendance.students.some(
-    (student) =>
-      student.id == null ||
-      !ATTENDANCE_STATUSES.includes(student.status)
+    (student) => student.id == null || !ATTENDANCE_STATUSES.includes(student.status),
   )
 
   if (invalid) {
-    throw new TypeError(
-      'Cada estudiante necesita un identificador y estado válido.'
-    )
+    throw new TypeError('Cada estudiante necesita un identificador y estado válido.')
   }
 
   const attendances = getAttendances()
@@ -182,9 +157,7 @@ export function saveAttendance(attendance) {
   }
 
   const existingIndex = attendances.findIndex(
-    (saved) =>
-      Number(saved.groupId) === groupId &&
-      saved.date === attendance.date
+    (saved) => Number(saved.groupId) === groupId && saved.date === attendance.date,
   )
 
   if (existingIndex === -1) {
@@ -193,10 +166,7 @@ export function saveAttendance(attendance) {
     attendances[existingIndex] = newAttendance
   }
 
-  localStorage.setItem(
-    ATTENDANCES_STORAGE_KEY,
-    JSON.stringify(attendances)
-  )
+  localStorage.setItem(ATTENDANCES_STORAGE_KEY, JSON.stringify(attendances))
 
   return newAttendance
 }
