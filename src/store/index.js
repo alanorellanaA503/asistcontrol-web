@@ -1,4 +1,7 @@
+
 import { createStore } from 'vuex'
+
+
 
 const STORAGE_KEY = 'asistcontrol-session'
 
@@ -17,6 +20,9 @@ const store = createStore({
     user: savedUser,
     isAuthenticated: !!savedUser,
     // Notificación global: { text, color } o null
+
+
+
     notice: null,
   },
 
