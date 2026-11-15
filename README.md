@@ -86,6 +86,11 @@ Iniciar el servidor:
 npm run dev
 ```
 
+### Acceso de prueba
+
+- **Usuario:** `ana`
+- **Contraseña:** `124`
+
 ## Estructura del proyecto
 
 ```text
