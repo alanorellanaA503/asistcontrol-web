@@ -122,4 +122,4 @@ Ciclo II-2026 – ITCA-FEPADE.
 
 ## Estado
 
-En desarrollo.
+Finalizado
